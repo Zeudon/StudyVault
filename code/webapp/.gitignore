@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+*.db
+*.sqlite
+*.sqlite3
+
+# Backend specific
+backend/.env
+backend/uploads/
+backend/studyvault.db
+
+# Node/Frontend
+node_modules/
+dist/
+build/
+.vite/
+*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Environment variables
+.env
+.env.local
