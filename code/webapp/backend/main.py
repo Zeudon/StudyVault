@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import os
@@ -182,6 +183,37 @@ async def upload_content(
     db.refresh(new_item)
     
     return new_item
+
+
+@app.get("/api/library/{item_id}/download")
+async def download_file(
+    item_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Download/view a PDF file"""
+    item = db.query(LibraryItem).filter(
+        LibraryItem.id == item_id,
+        LibraryItem.user_id == current_user.id,
+    ).first()
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    if item.type != "pdf":
+        raise HTTPException(status_code=400, detail="Only PDF files can be downloaded")
+    
+    if not os.path.exists(item.url):
+        raise HTTPException(status_code=404, detail="File not found on server")
+    
+    # Extract filename from path
+    filename = os.path.basename(item.url)
+    
+    return FileResponse(
+        path=item.url,
+        filename=filename,
+        media_type="application/pdf",
+    )
 
 
 @app.delete("/api/library/{item_id}")
