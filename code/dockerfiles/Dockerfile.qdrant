@@ -1,0 +1,13 @@
+## Dockerfile for the Qdrant vector database service
+#
+# In most cases you should use the official Qdrant image directly.  This
+# Dockerfile simply uses the official image as its base.  To enable
+# persistence, mount a volume to `/qdrant/storage` in your docker-compose
+# file as recommended by the Qdrant documentation【395986434822453†L390-L400】.
+
+FROM qdrant/qdrant:latest
+
+# Uncomment the next line if you need to provide a custom configuration file
+# COPY custom_config.yaml /qdrant/config/production.yaml
+
+EXPOSE 6333 6334

@@ -1,0 +1,19 @@
+## Dockerfile for the PostgreSQL database service
+#
+# You can normally use the official postgres:16 image directly in
+# docker-compose.  This Dockerfile wraps the official image and allows
+# you to include optional initialization scripts.  The underlying
+# postgres image will automatically run any scripts placed in
+# /docker-entrypoint-initdb.d during container startup.
+
+FROM postgres:16
+
+# Copy initialization scripts (SQL or shell files) into the entrypoint directory
+# If you have any .sql or .sh files that set up your schema or seed data,
+# place them in the init-scripts directory in your repository and uncomment
+# the COPY line below.  See the Docker and Postgres docs for details on
+# how init scripts are executed【730129979721829†L151-L174】.
+#
+# COPY init-scripts/ /docker-entrypoint-initdb.d/
+
+EXPOSE 5432

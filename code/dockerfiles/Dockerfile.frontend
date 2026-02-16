@@ -1,0 +1,32 @@
+## Dockerfile for the React/TypeScript frontend service
+#
+# This multi-stage build compiles your React application using a Node base
+# image and then serves the static assets with Nginx.  The first stage
+# installs dependencies and runs `npm run build` to produce the optimized
+# build directory【595338787345324†L74-L110】.  The final stage uses the
+# official Nginx image and copies the build output into the directory
+# served by Nginx【595338787345324†L159-L176】.
+
+# --- Stage 1: build the React app ---
+FROM node:20-alpine AS build
+WORKDIR /app
+
+# Copy dependency definitions and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy the source code and build the app
+COPY . .
+RUN npm run build
+
+# --- Stage 2: serve with Nginx ---
+FROM nginx:1.25-alpine
+# Copy the built React app from the previous stage into Nginx's default html folder
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Optional: custom Nginx configuration to support client-side routing
+# Copy your nginx.conf if you have one (uncomment the next line if needed)
+# COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
