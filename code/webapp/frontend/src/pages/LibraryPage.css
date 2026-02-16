@@ -96,6 +96,31 @@
 .item-date {
   color: #999;
   font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.item-actions {
+  margin-top: 12px;
+}
+
+.view-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.view-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .delete-button {

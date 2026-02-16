@@ -62,6 +62,31 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ onLogout }) => {
     fetchLibraryItems()
   }
 
+  const handleViewPDF = async (id: number) => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get(`/api/library/${id}/download`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      })
+      
+      // Create a blob URL and open in new tab
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      
+      // Clean up the URL after a short delay
+      setTimeout(() => window.URL.revokeObjectURL(url), 100)
+    } catch (error) {
+      console.error('Error viewing PDF:', error)
+      alert('Failed to open PDF')
+    }
+  }
+
+  const handleViewYouTube = (url: string) => {
+    window.open(url, '_blank')
+  }
+
   return (
     <div className="library-page">
       <Navbar
@@ -98,6 +123,23 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ onLogout }) => {
                   <p className="item-date">
                     Added: {new Date(item.created_at).toLocaleDateString()}
                   </p>
+                  <div className="item-actions">
+                    {item.type === 'pdf' ? (
+                      <button
+                        className="view-button"
+                        onClick={() => handleViewPDF(item.id)}
+                      >
+                        📥 Download PDF
+                      </button>
+                    ) : (
+                      <button
+                        className="view-button"
+                        onClick={() => handleViewYouTube(item.url)}
+                      >
+                        ▶️ Watch Video
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <button
                   className="delete-button"
