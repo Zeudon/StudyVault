@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 from database import engine, Base, get_db
 from models import User, LibraryItem
-from schemas import UserCreate, UserLogin, UserResponse, Token, LibraryItemResponse
+from schemas import UserCreate, UserLogin, UserResponse, Token, LibraryItemResponse, ChatRequest, ChatResponse
 from auth import (
     get_password_hash,
     verify_password,
@@ -216,6 +216,38 @@ async def delete_library_item(
     db.commit()
     
     return {"message": "Item deleted successfully"}
+
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat(
+    chat_request: ChatRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Query the RAG system with user's question"""
+    user_query = chat_request.user_query
+    user_id = current_user.id
+    
+    # TODO: Implement RAG system query
+    # This will:
+    # 1. Search vector database for relevant documents from user's library
+    # 2. Retrieve relevant chunks/context
+    # 3. Send to LLM with context for answer generation
+    # 4. Return formatted response with sources
+    
+    # Placeholder response for now
+    try:
+        # Future: response = vector_service.query_rag(user_query, user_id)
+        response_text = f"RAG system received your query: '{user_query}'. LLM integration coming soon!"
+        sources = []
+        
+        return ChatResponse(
+            response=response_text,
+            sources=sources
+        )
+    except Exception as e:
+        print(f"Error in RAG query: {e}")
+        raise HTTPException(status_code=500, detail="Error processing your query")
 
 
 if __name__ == "__main__":
