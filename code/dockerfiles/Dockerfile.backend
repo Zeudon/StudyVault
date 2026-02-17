@@ -9,10 +9,11 @@
 
 FROM python:3.11-slim AS base
 
-# Install system dependencies (if your app needs additional OS packages, add them here)
+# Install system dependencies including curl for healthcheck
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
+        curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
@@ -27,10 +28,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
+# Create uploads directory
+RUN mkdir -p /app/uploads
+
 # Expose the port FastAPI will listen on
 EXPOSE 8000
 
-# Start the FastAPI application using Uvicorn.  We use the exec form of CMD
-# to ensure proper signal handling and graceful shutdown as recommended by
-# the FastAPI documentation【228886493103112†L509-L573】.
+# Start the FastAPI application using Uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

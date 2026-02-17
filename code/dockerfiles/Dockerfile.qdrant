@@ -7,7 +7,9 @@
 
 FROM qdrant/qdrant:latest
 
-# Uncomment the next line if you need to provide a custom configuration file
-# COPY custom_config.yaml /qdrant/config/production.yaml
+# Install curl for healthcheck
+RUN apt-get update && \
+    apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
 
 EXPOSE 6333 6334
