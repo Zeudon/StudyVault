@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -25,6 +25,8 @@ class LibraryItem(Base):
     title = Column(String, nullable=False)
     type = Column(String, nullable=False)  # 'pdf' or 'youtube'
     url = Column(String, nullable=False)  # file path or YouTube URL
+    qdrant_ids = Column(JSON, nullable=True)  # List of Qdrant point IDs
+    chunk_count = Column(Integer, default=0)  # Number of chunks indexed
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="library_items")
