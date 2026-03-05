@@ -259,15 +259,16 @@ class RAGOrchestrator:
             from qdrant_client.models import FieldCondition, Filter, MatchValue
 
             query_vec = await self._legacy_agent.embeddings.aembed_query(query)
-            hits = await self._legacy_agent.qdrant_client.search(
+            response = await self._legacy_agent.qdrant_client.query_points(
                 collection_name=COLLECTION_NAME,
-                query_vector=query_vec,
+                query=query_vec,
                 query_filter=Filter(
                     must=[FieldCondition(key="user_id", match=MatchValue(value=user_id))]
                 ),
                 limit=limit,
                 with_payload=True,
             )
+            hits = response.points
             results = [
                 {
                     "text": h.payload.get("text"),
