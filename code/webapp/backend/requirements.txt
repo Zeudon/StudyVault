@@ -18,6 +18,6 @@ langchain-experimental>=0.3.0
 langchain-google-genai>=2.0.0
 qdrant-client>=1.16.0
 pypdf>=3.17.0
-youtube-transcript-api>=0.6.2
+youtube-transcript-api>=1.0.0
 httpx>=0.27.0
 google-generativeai>=0.8.0
