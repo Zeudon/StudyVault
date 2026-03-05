@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import LibraryPage from './pages/LibraryPage'
+import ChatPage from './pages/ChatPage'
 import './App.css'
 
 function App() {
@@ -49,6 +50,16 @@ function App() {
           element={
             isAuthenticated ? (
               <LibraryPage user={user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            isAuthenticated ? (
+              <ChatPage user={user} onLogout={handleLogout} />
             ) : (
               <Navigate to="/" replace />
             )

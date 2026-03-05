@@ -1,3 +1,4 @@
+import { useNavigate, useLocation } from 'react-router-dom'
 import './Navbar.css'
 
 interface NavbarProps {
@@ -7,6 +8,9 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onAuthClick, onLogout }) => {
+  const navigate = useNavigate()
+  const location = useLocation()
+
   return (
     <nav className="navbar">
       <div className="navbar-content">
@@ -17,7 +21,18 @@ const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onAuthClick, onLogout 
         <div className="navbar-actions">
           {isAuthenticated ? (
             <>
-              <button className="nav-button">Library</button>
+              <button
+                className={`nav-button${location.pathname === '/library' ? ' active' : ''}`}
+                onClick={() => navigate('/library')}
+              >
+                Library
+              </button>
+              <button
+                className={`nav-button${location.pathname === '/chat' ? ' active' : ''}`}
+                onClick={() => navigate('/chat')}
+              >
+                Chat
+              </button>
               <button className="nav-button logout" onClick={onLogout}>
                 Log Out
               </button>
