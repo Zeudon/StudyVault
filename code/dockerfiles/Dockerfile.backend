@@ -20,13 +20,17 @@ RUN apt-get update && \
 WORKDIR /app
 
 # Copy only the dependency specification to leverage Docker layer caching
-COPY requirements.txt ./
+# (build context is the code/ directory)
+COPY webapp/backend/requirements.txt ./
 
 # Install Python dependencies.  The --no-cache-dir flag keeps the image small.
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
-COPY . .
+# Copy the backend application code
+COPY webapp/backend/ .
+
+# Copy the rag package so it is importable as 'rag'
+COPY rag/ ./rag/
 
 # Create uploads directory
 RUN mkdir -p /app/uploads
