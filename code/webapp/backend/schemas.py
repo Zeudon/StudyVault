@@ -45,6 +45,8 @@ class LibraryItemResponse(BaseModel):
     type: str
     url: str
     created_at: datetime
+    qdrant_ids: Optional[list] = None
+    chunk_count: Optional[int] = None
 
     class Config:
         from_attributes = True

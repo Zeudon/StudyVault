@@ -24,8 +24,10 @@ from rag import RAGOrchestrator
 
 load_dotenv()
 
-# Create database tables
+# Create database tables and apply incremental migrations
 Base.metadata.create_all(bind=engine)
+from database import run_migrations
+run_migrations()
 
 app = FastAPI(title="StudyVault API")
 
@@ -302,63 +304,19 @@ async def chat(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Query the RAG system with user's question"""
+    """Query the RAG system with the user's question."""
     user_query = chat_request.user_query
     user_id = current_user.id
-    user_name = current_user.username
-    
+
     try:
-        # Search vector database for relevant documents from user's library
-        search_results = await rag_orchestrator.search_documents(
-            query=user_query,
+        result = await rag_orchestrator.generate_response(
+            user_query=user_query,
             user_id=user_id,
-            limit=5  # Get top 5 most relevant chunks
+            db=db,
         )
-        
-        if not search_results:
-            return ChatResponse(
-                response="I couldn't find any relevant information in your library to answer this question. Try uploading some documents first!",
-                sources=[]
-            )
-        
-        # Build context from search results
-        context_parts = []
-        sources = []
-        seen_items = set()
-        
-        for i, result in enumerate(search_results, 1):
-            chunk_text = result.get("text", "")
-            metadata = result.get("metadata", {})
-            score = result.get("score", 0)
-            
-            # Add chunk to context
-            context_parts.append(f"[Source {i}]\n{chunk_text}\n")
-            
-            # Add unique sources
-            library_item_id = metadata.get("library_item_id")
-            if library_item_id and library_item_id not in seen_items:
-                seen_items.add(library_item_id)
-                sources.append({
-                    "title": metadata.get("title", "Unknown"),
-                    "type": metadata.get("source_type", "unknown"),
-                    "url": metadata.get("source_url", ""),
-                    "relevance_score": round(score, 3)
-                })
-        
-        # Combine context
-        context = "\n".join(context_parts)
-        
-        # TODO: Send to LLM with context for answer generation
-        # For now, return the context with a placeholder response
-        response_text = f"""Based on the following information from your library:
-
-{context}
-
-**Note:** LLM integration coming soon! The system found {len(search_results)} relevant chunks from {len(sources)} document(s) in your library."""
-        
         return ChatResponse(
-            response=response_text,
-            sources=sources
+            response=result["response"],
+            sources=result.get("sources", []),
         )
     except Exception as e:
         print(f"Error in RAG query: {e}")
