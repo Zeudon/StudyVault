@@ -28,5 +28,7 @@ class LibraryItem(Base):
     qdrant_ids = Column(JSON, nullable=True)  # List of Qdrant point IDs
     chunk_count = Column(Integer, default=0)  # Number of chunks indexed
     created_at = Column(DateTime, default=datetime.utcnow)
+    processing_status = Column(String, nullable=False, default="pending")  # 'pending' | 'processing' | 'completed' | 'failed'
+    processing_error = Column(String, nullable=True)
 
     user = relationship("User", back_populates="library_items")

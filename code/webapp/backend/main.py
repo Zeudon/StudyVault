@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Form, BackgroundTasks, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import FileResponse
@@ -11,9 +11,9 @@ from dotenv import load_dotenv
 # Add parent directory to path to import from rag folder
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from database import engine, Base, get_db
+from database import engine, Base, get_db, SessionLocal
 from models import User, LibraryItem
-from schemas import UserCreate, UserLogin, UserResponse, Token, LibraryItemResponse, ChatRequest, ChatResponse
+from schemas import UserCreate, UserLogin, UserResponse, Token, LibraryItemResponse, ItemStatusResponse, ChatRequest, ChatResponse
 from auth import (
     get_password_hash,
     verify_password,
@@ -134,8 +134,74 @@ async def get_library(
     return items
 
 
-@app.post("/api/library/upload", response_model=LibraryItemResponse)
+async def _run_processing(
+    item_id: int,
+    content_type: str,
+    file_path: str,
+    user_id: int,
+    user_name: str,
+    title: str,
+) -> None:
+    """Background task: runs the RAG pipeline and updates processing_status in the DB."""
+    db = SessionLocal()
+    try:
+        item = db.query(LibraryItem).filter(LibraryItem.id == item_id).first()
+        if not item:
+            return
+        item.processing_status = "processing"
+        db.commit()
+
+        if content_type == "pdf":
+            result = await rag_orchestrator.process_pdf_upload(
+                file_path=file_path,
+                user_id=user_id,
+                user_name=user_name,
+                title=title,
+                library_item_id=item_id,
+            )
+        else:  # youtube
+            result = await rag_orchestrator.process_youtube_upload(
+                youtube_url=file_path,
+                user_id=user_id,
+                user_name=user_name,
+                title=title,
+                library_item_id=item_id,
+            )
+
+        # Re-query to get a fresh object after the long-running pipeline
+        item = db.query(LibraryItem).filter(LibraryItem.id == item_id).first()
+        if not item:
+            return
+
+        if result.get("status") == "success":
+            item.qdrant_ids = result["point_ids"]
+            item.chunk_count = result["chunk_count"]
+            item.processing_status = "completed"
+            item.processing_error = None
+        else:
+            item.processing_status = "failed"
+            item.processing_error = result.get("error", "Unknown error during processing")
+        db.commit()
+
+    except Exception as exc:
+        try:
+            db.rollback()
+            item = db.query(LibraryItem).filter(LibraryItem.id == item_id).first()
+            if item:
+                item.processing_status = "failed"
+                item.processing_error = str(exc)
+                db.commit()
+        except Exception:
+            pass
+        import traceback
+        traceback.print_exc()
+    finally:
+        db.close()
+
+
+@app.post("/api/library/upload", response_model=LibraryItemResponse, status_code=202)
 async def upload_content(
+    background_tasks: BackgroundTasks,
     title: str = Form(...),
     type: str = Form(...),
     url: Optional[str] = Form(None),
@@ -143,94 +209,62 @@ async def upload_content(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Upload new content (PDF or YouTube link)"""
-    file_path = None
-    
+    """Upload new content (PDF or YouTube link) — returns 202 immediately, processes in background."""
     if type == "pdf":
         if not file:
             raise HTTPException(status_code=400, detail="PDF file is required")
-        
-        # Save file
         file_path = os.path.join(UPLOAD_DIR, f"{current_user.id}_{file.filename}")
         with open(file_path, "wb") as f:
-            content = await file.read()
-            f.write(content)
-        
-        # Create library item first to get the ID
-        new_item = LibraryItem(
-            user_id=current_user.id,
-            title=title,
-            type=type,
-            url=file_path,
-        )
-        db.add(new_item)
-        db.commit()
-        db.refresh(new_item)
-        
-        # Index in RAG system using orchestrator
-        try:
-            user_name = f"{current_user.first_name} {current_user.last_name}"
-            result = await rag_orchestrator.process_pdf_upload(
-                file_path=file_path,
-                user_id=current_user.id,
-                user_name=user_name,
-                title=title,
-                library_item_id=new_item.id
-            )
-            
-            if result["status"] == "success":
-                # Update library item with Qdrant IDs
-                new_item.qdrant_ids = result["point_ids"]
-                new_item.chunk_count = result["chunk_count"]
-                db.commit()
-                db.refresh(new_item)
-            else:
-                print(f"Error indexing PDF: {result.get('error')}")
-        except Exception as e:
-            print(f"Error indexing PDF: {e}")
-    
+            f.write(await file.read())
     elif type == "youtube":
         if not url:
             raise HTTPException(status_code=400, detail="YouTube URL is required")
         file_path = url
-        
-        # Create library item first to get the ID
-        new_item = LibraryItem(
-            user_id=current_user.id,
-            title=title,
-            type=type,
-            url=file_path,
-        )
-        db.add(new_item)
-        db.commit()
-        db.refresh(new_item)
-        
-        # Index YouTube video using orchestrator
-        try:
-            user_name = f"{current_user.first_name} {current_user.last_name}"
-            result = await rag_orchestrator.process_youtube_upload(
-                youtube_url=url,
-                user_id=current_user.id,
-                user_name=user_name,
-                title=title,
-                library_item_id=new_item.id
-            )
-            
-            if result["status"] == "success":
-                # Update library item with Qdrant IDs
-                new_item.qdrant_ids = result["point_ids"]
-                new_item.chunk_count = result["chunk_count"]
-                db.commit()
-                db.refresh(new_item)
-            else:
-                print(f"Error indexing YouTube: {result.get('error')}")
-        except Exception as e:
-            print(f"Error indexing YouTube video: {e}")
-    
     else:
         raise HTTPException(status_code=400, detail="Invalid content type")
-    
+
+    new_item = LibraryItem(
+        user_id=current_user.id,
+        title=title,
+        type=type,
+        url=file_path,
+        processing_status="pending",
+    )
+    db.add(new_item)
+    db.commit()
+    db.refresh(new_item)
+
+    user_name = f"{current_user.first_name} {current_user.last_name}"
+    background_tasks.add_task(
+        _run_processing,
+        item_id=new_item.id,
+        content_type=type,
+        file_path=file_path,
+        user_id=current_user.id,
+        user_name=user_name,
+        title=title,
+    )
+
     return new_item
+
+
+@app.get("/api/library/processing-status", response_model=List[ItemStatusResponse])
+async def get_processing_status(
+    ids: str = Query(..., description="Comma-separated library item IDs to check"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return processing status for a specific set of library items (used for polling)."""
+    try:
+        item_ids = [int(i.strip()) for i in ids.split(",") if i.strip()]
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid item IDs")
+
+    items = db.query(LibraryItem).filter(
+        LibraryItem.id.in_(item_ids),
+        LibraryItem.user_id == current_user.id,
+    ).all()
+    return items
 
 
 @app.get("/api/library/{item_id}/download")
