@@ -136,3 +136,47 @@
 .delete-button:hover {
   transform: scale(1.2);
 }
+
+/* Processing status indicators */
+.item-status {
+  font-size: 0.82rem;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.status-pending {
+  color: #aaa;
+}
+
+.status-processing {
+  color: #667eea;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-completed {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.status-failed {
+  color: #e74c3c;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #c5cdf9;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

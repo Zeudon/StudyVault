@@ -2,9 +2,20 @@ import { useState } from 'react'
 import axios from 'axios'
 import './AddContentModal.css'
 
+interface LibraryItem {
+  id: number
+  title: string
+  type: 'pdf' | 'youtube'
+  url: string
+  created_at: string
+  chunk_count?: number
+  processing_status: 'pending' | 'processing' | 'completed' | 'failed'
+  processing_error?: string
+}
+
 interface AddContentModalProps {
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (newItem: LibraryItem) => void
 }
 
 const AddContentModal: React.FC<AddContentModalProps> = ({ onClose, onSuccess }) => {
@@ -46,14 +57,14 @@ const AddContentModal: React.FC<AddContentModalProps> = ({ onClose, onSuccess })
         formData.append('url', url)
       }
 
-      await axios.post('/api/library/upload', formData, {
+      const response = await axios.post('/api/library/upload', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       })
 
-      onSuccess()
+      onSuccess(response.data)
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to add content')
     } finally {
@@ -125,7 +136,7 @@ const AddContentModal: React.FC<AddContentModalProps> = ({ onClose, onSuccess })
           {error && <div className="error-message">{error}</div>}
 
           <button type="submit" className="submit-button" disabled={loading}>
-            {loading ? 'Uploading...' : 'Add Content'}
+            {loading ? 'Adding...' : 'Add Content'}
           </button>
         </form>
       </div>

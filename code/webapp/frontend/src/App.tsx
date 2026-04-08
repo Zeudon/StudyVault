@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LandingPage from './pages/LandingPage'
 import LibraryPage from './pages/LibraryPage'
 import ChatPage from './pages/ChatPage'
+import { ToastProvider } from './components/Toast'
 import './App.css'
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
   }
 
   return (
+    <ToastProvider>
     <Router>
       <Routes>
         <Route
@@ -67,6 +69,7 @@ function App() {
         />
       </Routes>
     </Router>
+    </ToastProvider>
   )
 }
 
