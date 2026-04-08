@@ -19,6 +19,9 @@ def run_migrations():
     migrations = [
         "ALTER TABLE library_items ADD COLUMN IF NOT EXISTS qdrant_ids JSONB",
         "ALTER TABLE library_items ADD COLUMN IF NOT EXISTS chunk_count INTEGER DEFAULT 0",
+        "ALTER TABLE library_items ADD COLUMN IF NOT EXISTS processing_status VARCHAR NOT NULL DEFAULT 'pending'",
+        "ALTER TABLE library_items ADD COLUMN IF NOT EXISTS processing_error TEXT",
+        "UPDATE library_items SET processing_status = 'completed' WHERE qdrant_ids IS NOT NULL AND processing_status = 'pending'",
     ]
     with engine.connect() as conn:
         for sql in migrations:

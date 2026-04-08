@@ -47,6 +47,18 @@ class LibraryItemResponse(BaseModel):
     created_at: datetime
     qdrant_ids: Optional[list] = None
     chunk_count: Optional[int] = None
+    processing_status: str = "pending"
+    processing_error: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ItemStatusResponse(BaseModel):
+    id: int
+    processing_status: str
+    processing_error: Optional[str] = None
+    chunk_count: Optional[int] = None
 
     class Config:
         from_attributes = True
