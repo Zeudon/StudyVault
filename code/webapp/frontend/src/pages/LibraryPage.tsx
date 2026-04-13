@@ -27,6 +27,10 @@ const LibraryPage: React.FC<LibraryPageProps> = () => {
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [processingIds, setProcessingIds] = useState<Set<number>>(new Set())
+  const [searchQuery, setSearchQuery] = useState('')
+  const [typeFilter, setTypeFilter] = useState<'all' | 'pdf' | 'youtube'>('all')
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'az'>('newest')
   const { addToast } = useToast()
 
   useEffect(() => {
@@ -119,8 +123,6 @@ const LibraryPage: React.FC<LibraryPageProps> = () => {
   }, [processingIds])
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this item?')) return
-
     try {
       const token = localStorage.getItem('token')
       await axios.delete(`/api/library/${id}`, {
@@ -134,7 +136,9 @@ const LibraryPage: React.FC<LibraryPageProps> = () => {
       })
     } catch (error) {
       console.error('Error deleting item:', error)
-      alert('Failed to delete item')
+      addToast({ type: 'error', message: 'Failed to delete item' })
+    } finally {
+      setConfirmDeleteId(null)
     }
   }
 
@@ -157,7 +161,7 @@ const LibraryPage: React.FC<LibraryPageProps> = () => {
       setTimeout(() => window.URL.revokeObjectURL(url), 100)
     } catch (error) {
       console.error('Error viewing PDF:', error)
-      alert('Failed to open PDF')
+      addToast({ type: 'error', message: 'Failed to open PDF' })
     }
   }
 
@@ -165,25 +169,109 @@ const LibraryPage: React.FC<LibraryPageProps> = () => {
     window.open(url, '_blank')
   }
 
+  // Derived filtered + sorted list
+  const filteredItems = libraryItems
+    .filter((item) => {
+      const matchesType = typeFilter === 'all' || item.type === typeFilter
+      const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase())
+      return matchesType && matchesSearch
+    })
+    .sort((a, b) => {
+      if (sortOrder === 'oldest') return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      if (sortOrder === 'az') return a.title.localeCompare(b.title)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime() // newest
+    })
+
   return (
     <div className="library-page">
       <div className="library-content">
         <div className="library-header">
-          <h1>My Library</h1>
+          <h1>
+            My Library
+            {!loading && libraryItems.length > 0 && (
+              <span className="library-count">
+                · {filteredItems.length} {filteredItems.length === 1 ? 'Item' : 'Items'}
+              </span>
+            )}
+          </h1>
           <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
             + Add Content
           </button>
         </div>
 
+        {/* Search + filter controls */}
+        {!loading && libraryItems.length > 0 && (
+          <div className="library-controls">
+            <input
+              type="search"
+              className="library-search"
+              placeholder="Search your library…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <div className="library-filters">
+              <button
+                className={`btn btn-sm ${typeFilter === 'all' ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setTypeFilter('all')}
+              >
+                All
+              </button>
+              <button
+                className={`btn btn-sm ${typeFilter === 'pdf' ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setTypeFilter('pdf')}
+              >
+                PDFs
+              </button>
+              <button
+                className={`btn btn-sm ${typeFilter === 'youtube' ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setTypeFilter('youtube')}
+              >
+                Videos
+              </button>
+            </div>
+            <select
+              className="library-sort"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest' | 'az')}
+              aria-label="Sort by"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="az">A → Z</option>
+            </select>
+          </div>
+        )}
+
         {loading ? (
-          <div className="library-state">Loading your library...</div>
+          // Skeleton loading cards
+          <div className="library-grid">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="library-item skeleton-card">
+                <div className="skeleton skeleton-icon" />
+                <div className="skeleton-content">
+                  <div className="skeleton skeleton-title" />
+                  <div className="skeleton skeleton-line" />
+                  <div className="skeleton skeleton-line skeleton-line--short" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : libraryItems.length === 0 ? (
+          <div className="library-empty">
+            <div className="library-empty-icon">📚</div>
+            <h2 className="library-empty-title">Your library is empty</h2>
+            <p className="library-empty-desc">Upload PDFs or add YouTube videos to start building your knowledge base.</p>
+            <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+              + Add Content
+            </button>
+          </div>
+        ) : filteredItems.length === 0 ? (
           <div className="library-state">
-            <p>Your library is empty. Start by adding some content!</p>
+            <p>No items match your search.</p>
           </div>
         ) : (
           <div className="library-grid">
-            {libraryItems.map((item) => (
+            {filteredItems.map((item) => (
               <div key={item.id} className="library-item">
                 <div className="item-icon">
                   {item.type === 'pdf' ? '📄' : '🎥'}
@@ -230,13 +318,33 @@ const LibraryPage: React.FC<LibraryPageProps> = () => {
                     )}
                   </div>
                 </div>
-                <button
-                  className="btn btn-danger btn-icon delete-btn"
-                  onClick={() => handleDelete(item.id)}
-                  aria-label="Delete item"
-                >
-                  ✕
-                </button>
+
+                {/* Inline delete confirmation */}
+                {confirmDeleteId === item.id ? (
+                  <div className="delete-confirm">
+                    <span className="delete-confirm-label">Delete?</span>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setConfirmDeleteId(null)}
+                    >
+                      No
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="btn btn-danger btn-icon delete-btn"
+                    onClick={() => setConfirmDeleteId(item.id)}
+                    aria-label="Delete item"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             ))}
           </div>

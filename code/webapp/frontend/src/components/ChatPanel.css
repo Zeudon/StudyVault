@@ -36,6 +36,12 @@
   flex-shrink: 0;
 }
 
+.chat-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .chat-panel-title {
   display: flex;
   flex-direction: column;
@@ -112,6 +118,62 @@
 .bubble-text {
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* Markdown wrapper for assistant bubbles — overrides pre-wrap */
+.bubble-markdown {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.bubble-markdown .md-p {
+  margin-bottom: 0.5em;
+}
+.bubble-markdown .md-p:last-child {
+  margin-bottom: 0;
+}
+
+.bubble-markdown .md-ul,
+.bubble-markdown .md-ol {
+  padding-left: 1.4em;
+  margin: 0.4em 0;
+}
+
+.bubble-markdown .md-li {
+  margin-bottom: 0.2em;
+}
+
+.bubble-markdown .md-strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.bubble-markdown .md-link {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.bubble-markdown .md-code-inline {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.82em;
+}
+
+.bubble-markdown .md-code-block {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 0.6em 0;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.82em;
+  line-height: 1.6;
+  white-space: pre;
 }
 
 /* ── Typing Indicator ─────────────────────────────────── */

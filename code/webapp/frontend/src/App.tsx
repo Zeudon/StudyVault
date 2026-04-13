@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import axios from 'axios'
 import LandingPage from './pages/LandingPage'
 import LibraryPage from './pages/LibraryPage'
 import Navbar from './components/Navbar'
@@ -40,6 +41,20 @@ function App() {
     setIsChatPanelOpen(false)
   }
 
+  // Auto-logout when the API returns 401 (expired token)
+  useEffect(() => {
+    const id = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401 && isAuthenticated) {
+          handleLogout()
+        }
+        return Promise.reject(error)
+      }
+    )
+    return () => axios.interceptors.response.eject(id)
+  }, [isAuthenticated])
+
   const handleAuthClick = (mode: 'signin' | 'signup') => {
     setAuthMode(mode)
     setShowAuthModal(true)
@@ -57,30 +72,32 @@ function App() {
             isChatPanelOpen={isChatPanelOpen}
           />
 
-          <Routes>
-            <Route
-              path="/"
-              element={
-                isAuthenticated ? (
-                  <Navigate to="/library" replace />
-                ) : (
-                  <LandingPage onLogin={handleLogin} onAuthClick={handleAuthClick} />
-                )
-              }
-            />
-            <Route
-              path="/library"
-              element={
-                isAuthenticated ? (
-                  <LibraryPage user={user} onLogout={handleLogout} />
-                ) : (
-                  <Navigate to="/" replace />
-                )
-              }
-            />
-            {/* Legacy /chat route — redirects to library (panel opened via Navbar) */}
-            <Route path="/chat" element={<Navigate to="/library" replace />} />
-          </Routes>
+          <div className={`app-main${isChatPanelOpen ? ' app-main--panel-open' : ''}`}>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  isAuthenticated ? (
+                    <Navigate to="/library" replace />
+                  ) : (
+                    <LandingPage onLogin={handleLogin} onAuthClick={handleAuthClick} />
+                  )
+                }
+              />
+              <Route
+                path="/library"
+                element={
+                  isAuthenticated ? (
+                    <LibraryPage user={user} onLogout={handleLogout} />
+                  ) : (
+                    <Navigate to="/" replace />
+                  )
+                }
+              />
+              {/* Legacy /chat route — redirects to library (panel opened via Navbar) */}
+              <Route path="/chat" element={<Navigate to="/library" replace />} />
+            </Routes>
+          </div>
 
           <ChatPanel
             isOpen={isChatPanelOpen}

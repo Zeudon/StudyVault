@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import './ChatPanel.css'
 
 interface Source {
@@ -23,19 +25,34 @@ interface ChatPanelProps {
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const STORAGE_KEY = 'studyvault_chat_history'
 
 const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen, user, onClose }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      content: `Hi ${user?.first_name ?? 'there'}! Ask me anything about your uploaded documents and videos.`,
-    },
-  ])
+  const makeWelcome = (): Message => ({
+    id: 'welcome',
+    role: 'assistant',
+    content: `Hi ${user?.first_name ?? 'there'}! Ask me anything about your uploaded documents and videos.`,
+  })
+
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY)
+      if (stored) return JSON.parse(stored) as Message[]
+    } catch { /* ignore parse errors */ }
+    return [makeWelcome()]
+  })
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Persist messages to sessionStorage on every change (skip loading placeholders)
+  useEffect(() => {
+    const toStore = messages.filter(m => !m.loading)
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(toStore))
+    } catch { /* quota exceeded — non-fatal */ }
+  }, [messages])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -47,6 +64,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen, user, onClose }) => {
       setTimeout(() => inputRef.current?.focus(), 300)
     }
   }, [isOpen])
+
+  const clearHistory = () => {
+    sessionStorage.removeItem(STORAGE_KEY)
+    setMessages([makeWelcome()])
+  }
+
+  const resetTextareaHeight = () => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto'
+    }
+  }
 
   const sendMessage = async () => {
     const query = input.trim()
@@ -66,6 +94,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen, user, onClose }) => {
 
     setMessages(prev => [...prev, userMsg, placeholderMsg])
     setInput('')
+    resetTextareaHeight()
     setIsLoading(true)
 
     try {
@@ -116,11 +145,21 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen, user, onClose }) => {
       <div className="chat-panel-header">
         <div className="chat-panel-title">
           <span className="chat-panel-title-text">AI Assistant</span>
-          <span className="chat-panel-subtitle">Ask about your documents & videos</span>
+          <span className="chat-panel-subtitle">Ask about your documents &amp; videos</span>
         </div>
-        <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Close chat panel">
-          ✕
-        </button>
+        <div className="chat-panel-actions">
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={clearHistory}
+            title="Clear chat history"
+            aria-label="Clear chat history"
+          >
+            Clear
+          </button>
+          <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Close chat panel">
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -134,7 +173,33 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen, user, onClose }) => {
                 </span>
               ) : (
                 <>
-                  <p className="bubble-text">{msg.content}</p>
+                  {msg.role === 'assistant' ? (
+                    <div className="bubble-text bubble-markdown">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          code({ className, children, ...props }) {
+                            const isBlock = /language-/.test(className || '')
+                            return isBlock
+                              ? <pre className="md-code-block"><code className={className}>{children}</code></pre>
+                              : <code className="md-code-inline" {...props}>{children}</code>
+                          },
+                          p({ children }) { return <p className="md-p">{children}</p> },
+                          ul({ children }) { return <ul className="md-ul">{children}</ul> },
+                          ol({ children }) { return <ol className="md-ol">{children}</ol> },
+                          li({ children }) { return <li className="md-li">{children}</li> },
+                          strong({ children }) { return <strong className="md-strong">{children}</strong> },
+                          a({ href, children }) {
+                            return <a href={href} target="_blank" rel="noopener noreferrer" className="md-link">{children}</a>
+                          },
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="bubble-text">{msg.content}</p>
+                  )}
                   {msg.sources && msg.sources.length > 0 && (
                     <details className="sources-block">
                       <summary>{msg.sources.length} source{msg.sources.length > 1 ? 's' : ''}</summary>
@@ -167,7 +232,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen, user, onClose }) => {
           rows={1}
           placeholder="Ask about your documents or videos…"
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={e => {
+            setInput(e.target.value)
+            e.target.style.height = 'auto'
+            e.target.style.height = `${e.target.scrollHeight}px`
+          }}
           onKeyDown={handleKeyDown}
           disabled={isLoading}
         />

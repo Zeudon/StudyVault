@@ -20,7 +20,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const location = useLocation()
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar${isChatPanelOpen ? ' navbar--panel-open' : ''}`}>
       <div className="navbar-content">
         <button className="navbar-logo" onClick={() => navigate(isAuthenticated ? '/library' : '/')}>
           <div className="logo-mark">SV</div>

@@ -3,3 +3,22 @@
   display: flex;
   flex-direction: column;
 }
+
+/* Shift main content left when chat panel is open */
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: padding-right var(--transition-panel);
+}
+
+.app-main--panel-open {
+  padding-right: 40vw;
+}
+
+@media (max-width: 768px) {
+  /* On mobile the panel is full-width — no point shifting */
+  .app-main--panel-open {
+    padding-right: 0;
+  }
+}
