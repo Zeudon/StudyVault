@@ -2,13 +2,18 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import LibraryPage from './pages/LibraryPage'
-import ChatPage from './pages/ChatPage'
+import Navbar from './components/Navbar'
+import ChatPanel from './components/ChatPanel'
+import AuthModal from './components/AuthModal'
 import { ToastProvider } from './components/Toast'
 import './App.css'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
   const [user, setUser] = useState<any>(null)
+  const [isChatPanelOpen, setIsChatPanelOpen] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -24,6 +29,7 @@ function App() {
     localStorage.setItem('user', JSON.stringify(userData))
     setUser(userData)
     setIsAuthenticated(true)
+    setShowAuthModal(false)
   }
 
   const handleLogout = () => {
@@ -31,44 +37,67 @@ function App() {
     localStorage.removeItem('user')
     setUser(null)
     setIsAuthenticated(false)
+    setIsChatPanelOpen(false)
+  }
+
+  const handleAuthClick = (mode: 'signin' | 'signup') => {
+    setAuthMode(mode)
+    setShowAuthModal(true)
   }
 
   return (
     <ToastProvider>
-    <Router>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/library" replace />
-            ) : (
-              <LandingPage onLogin={handleLogin} />
-            )
-          }
-        />
-        <Route
-          path="/library"
-          element={
-            isAuthenticated ? (
-              <LibraryPage user={user} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
-        <Route
-          path="/chat"
-          element={
-            isAuthenticated ? (
-              <ChatPage user={user} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
-      </Routes>
-    </Router>
+      <Router>
+        <div className="app-shell">
+          <Navbar
+            isAuthenticated={isAuthenticated}
+            onAuthClick={handleAuthClick}
+            onLogout={handleLogout}
+            onChatToggle={() => setIsChatPanelOpen(p => !p)}
+            isChatPanelOpen={isChatPanelOpen}
+          />
+
+          <Routes>
+            <Route
+              path="/"
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/library" replace />
+                ) : (
+                  <LandingPage onLogin={handleLogin} onAuthClick={handleAuthClick} />
+                )
+              }
+            />
+            <Route
+              path="/library"
+              element={
+                isAuthenticated ? (
+                  <LibraryPage user={user} onLogout={handleLogout} />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            {/* Legacy /chat route — redirects to library (panel opened via Navbar) */}
+            <Route path="/chat" element={<Navigate to="/library" replace />} />
+          </Routes>
+
+          <ChatPanel
+            isOpen={isChatPanelOpen}
+            user={user}
+            onClose={() => setIsChatPanelOpen(false)}
+          />
+
+          {showAuthModal && (
+            <AuthModal
+              mode={authMode}
+              onClose={() => setShowAuthModal(false)}
+              onLogin={handleLogin}
+              onSwitchMode={setAuthMode}
+            />
+          )}
+        </div>
+      </Router>
     </ToastProvider>
   )
 }

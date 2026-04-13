@@ -5,44 +5,53 @@ interface NavbarProps {
   isAuthenticated: boolean
   onAuthClick: (mode: 'signin' | 'signup') => void
   onLogout: () => void
+  onChatToggle: () => void
+  isChatPanelOpen: boolean
 }
 
-const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onAuthClick, onLogout }) => {
+const Navbar: React.FC<NavbarProps> = ({
+  isAuthenticated,
+  onAuthClick,
+  onLogout,
+  onChatToggle,
+  isChatPanelOpen,
+}) => {
   const navigate = useNavigate()
   const location = useLocation()
 
   return (
     <nav className="navbar">
       <div className="navbar-content">
-        <div className="navbar-logo">
-          <span className="logo-icon">📚</span>
+        <button className="navbar-logo" onClick={() => navigate(isAuthenticated ? '/library' : '/')}>
+          <div className="logo-mark">SV</div>
           <span className="logo-text">StudyVault</span>
-        </div>
+        </button>
+
         <div className="navbar-actions">
           {isAuthenticated ? (
             <>
               <button
-                className={`nav-button${location.pathname === '/library' ? ' active' : ''}`}
+                className={`btn btn-ghost btn-sm${location.pathname === '/library' ? ' active' : ''}`}
                 onClick={() => navigate('/library')}
               >
                 Library
               </button>
               <button
-                className={`nav-button${location.pathname === '/chat' ? ' active' : ''}`}
-                onClick={() => navigate('/chat')}
+                className={`btn btn-ghost btn-sm nav-chat-btn${isChatPanelOpen ? ' active' : ''}`}
+                onClick={onChatToggle}
               >
                 Chat
               </button>
-              <button className="nav-button logout" onClick={onLogout}>
+              <button className="btn btn-danger btn-sm" onClick={onLogout}>
                 Log Out
               </button>
             </>
           ) : (
             <>
-              <button className="nav-button" onClick={() => onAuthClick('signin')}>
+              <button className="btn btn-ghost btn-sm" onClick={() => onAuthClick('signin')}>
                 Sign In
               </button>
-              <button className="nav-button signup" onClick={() => onAuthClick('signup')}>
+              <button className="btn btn-primary btn-sm" onClick={() => onAuthClick('signup')}>
                 Sign Up
               </button>
             </>

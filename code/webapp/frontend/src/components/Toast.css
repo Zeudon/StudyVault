@@ -1,3 +1,7 @@
+/* ============================================================
+   Toast Notifications — dark theme
+   ============================================================ */
+
 .toast-container {
   position: fixed;
   bottom: 24px;
@@ -10,17 +14,25 @@
 
 .toast {
   padding: 12px 18px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: #fff;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 500;
   max-width: 360px;
   word-break: break-word;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(8px);
   animation: toast-slide-in 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.toast-success { background: #27ae60; }
-.toast-error   { background: #e74c3c; }
+.toast-success {
+  background: rgba(34, 197, 94, 0.88);
+}
+
+.toast-error {
+  background: rgba(240, 71, 71, 0.88);
+}
 
 @keyframes toast-slide-in {
   from { opacity: 0; transform: translateX(40px); }

@@ -1,16 +1,72 @@
-* {
+@import './styles/buttons.css';
+
+/* ============================================================
+   Design Tokens
+   ============================================================ */
+:root {
+  /* Backgrounds */
+  --bg:        #0d0d14;
+  --surface:   #16161f;
+  --surface-2: #1e1e2c;
+
+  /* Borders */
+  --border:       #2a2a3d;
+  --border-focus: #7c6af5;
+
+  /* Brand / Primary */
+  --primary:      #7c6af5;
+  --primary-from: #6366f1;
+  --primary-to:   #8b5cf6;
+  --primary-grad: linear-gradient(135deg, var(--primary-from), var(--primary-to));
+
+  /* Text */
+  --text-primary:   #e8e6f0;
+  --text-secondary: #8884a8;
+  --text-muted:     #55527a;
+
+  /* Semantic */
+  --success: #22c55e;
+  --error:   #f04747;
+  --warning: #f59e0b;
+
+  /* Chat bubbles */
+  --bubble-user:      #4f46e5;
+  --bubble-assistant: #1e1e2c;
+
+  /* Shape */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+
+  /* Transitions */
+  --transition:       0.2s ease;
+  --transition-panel: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================
+   Global Reset
+   ============================================================ */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--bg);
+  color: var(--text-primary);
   min-height: 100vh;
 }
 

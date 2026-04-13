@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import Navbar from '../components/Navbar'
 import AddContentModal from '../components/AddContentModal'
 import { useToast } from '../components/Toast'
 import axios from 'axios'
@@ -23,7 +22,7 @@ interface LibraryItem {
 
 const POLL_INTERVAL_MS = 3000
 
-const LibraryPage: React.FC<LibraryPageProps> = ({ onLogout }) => {
+const LibraryPage: React.FC<LibraryPageProps> = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -42,8 +41,6 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ onLogout }) => {
       })
       const items: LibraryItem[] = response.data
       setLibraryItems(items)
-      // Seed processingIds with any items already in-progress server-side
-      // (handles page refresh mid-processing, or opening a second tab)
       setProcessingIds(new Set(
         items
           .filter((i) => i.processing_status === 'pending' || i.processing_status === 'processing')
@@ -56,7 +53,6 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ onLogout }) => {
     }
   }
 
-  // Poll only the IDs that are still in-progress
   useEffect(() => {
     if (processingIds.size === 0) return
 
@@ -87,8 +83,6 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ onLogout }) => {
               update.processing_status === 'failed'
             ) {
               nowSettled.add(item.id)
-              // Collect toasts outside the updater — React may invoke updaters
-              // multiple times (Strict Mode), which would fire duplicate toasts
               if (!pendingToasts.some((t) => t.message.startsWith(`"${item.title}"`))) {
                 if (update.processing_status === 'completed') {
                   pendingToasts.push({
@@ -107,10 +101,8 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ onLogout }) => {
           })
         )
 
-        // Fire toasts outside the state updater so they run exactly once
         pendingToasts.forEach((t) => addToast(t))
 
-        // Remove settled IDs — next effect run will poll only the remaining ones
         if (nowSettled.size > 0) {
           setProcessingIds((prev) => {
             const next = new Set(prev)
@@ -127,9 +119,7 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ onLogout }) => {
   }, [processingIds])
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this item?')) {
-      return
-    }
+    if (!window.confirm('Are you sure you want to delete this item?')) return
 
     try {
       const token = localStorage.getItem('token')
@@ -161,11 +151,9 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ onLogout }) => {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob',
       })
-
       const blob = new Blob([response.data], { type: 'application/pdf' })
       const url = window.URL.createObjectURL(blob)
       window.open(url, '_blank')
-
       setTimeout(() => window.URL.revokeObjectURL(url), 100)
     } catch (error) {
       console.error('Error viewing PDF:', error)
@@ -179,23 +167,18 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ onLogout }) => {
 
   return (
     <div className="library-page">
-      <Navbar
-        isAuthenticated={true}
-        onAuthClick={() => {}}
-        onLogout={onLogout}
-      />
       <div className="library-content">
         <div className="library-header">
           <h1>My Library</h1>
-          <button className="add-button" onClick={() => setShowAddModal(true)}>
+          <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
             + Add Content
           </button>
         </div>
 
         {loading ? (
-          <div className="loading">Loading your library...</div>
+          <div className="library-state">Loading your library...</div>
         ) : libraryItems.length === 0 ? (
-          <div className="empty-state">
+          <div className="library-state">
             <p>Your library is empty. Start by adding some content!</p>
           </div>
         ) : (
@@ -232,26 +215,27 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ onLogout }) => {
                   <div className="item-actions">
                     {item.type === 'pdf' ? (
                       <button
-                        className="view-button"
+                        className="btn btn-secondary btn-sm"
                         onClick={() => handleViewPDF(item.id)}
                       >
-                        📥 Download PDF
+                        Download PDF
                       </button>
                     ) : (
                       <button
-                        className="view-button"
+                        className="btn btn-secondary btn-sm"
                         onClick={() => handleViewYouTube(item.url)}
                       >
-                        ▶️ Watch Video
+                        Watch Video
                       </button>
                     )}
                   </div>
                 </div>
                 <button
-                  className="delete-button"
+                  className="btn btn-danger btn-icon delete-btn"
                   onClick={() => handleDelete(item.id)}
+                  aria-label="Delete item"
                 >
-                  🗑️
+                  ✕
                 </button>
               </div>
             ))}

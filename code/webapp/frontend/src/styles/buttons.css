@@ -1,0 +1,112 @@
+/* ============================================================
+   Button Design System — single source of truth for all buttons
+   ============================================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1;
+  border-radius: var(--radius-md);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    border-color var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition);
+  white-space: nowrap;
+  text-decoration: none;
+  user-select: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ── Primary: purple gradient ─────────────────────────── */
+.btn-primary {
+  background: var(--primary-grad);
+  color: #fff;
+  border-color: transparent;
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 18px rgba(124, 106, 245, 0.45);
+  transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* ── Secondary: outline ───────────────────────────────── */
+.btn-secondary {
+  background: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(124, 106, 245, 0.1);
+}
+
+/* ── Danger: red tint ─────────────────────────────────── */
+.btn-danger {
+  background: rgba(240, 71, 71, 0.12);
+  color: var(--error);
+  border-color: rgba(240, 71, 71, 0.3);
+}
+.btn-danger:hover:not(:disabled) {
+  background: rgba(240, 71, 71, 0.22);
+  border-color: var(--error);
+}
+
+/* ── Ghost: no border/bg ──────────────────────────────── */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: transparent;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(124, 106, 245, 0.1);
+  color: var(--text-primary);
+}
+
+/* ── Ghost Active (for nav items) ────────────────────── */
+.btn-ghost.active {
+  color: var(--primary);
+  background: rgba(124, 106, 245, 0.12);
+}
+
+/* ── Size variants ────────────────────────────────────── */
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 0.82rem;
+}
+
+.btn-lg {
+  padding: 13px 28px;
+  font-size: 1rem;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+/* ── Icon-only (square) ───────────────────────────────── */
+.btn-icon {
+  padding: 8px;
+  border-radius: var(--radius-md);
+}

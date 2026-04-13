@@ -1,113 +1,139 @@
+/* ============================================================
+   Auth Modal — dark theme
+   ============================================================ */
+
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .modal-content {
-  background: white;
-  padding: 40px;
-  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 36px 32px;
+  border-radius: var(--radius-xl);
   width: 90%;
-  max-width: 450px;
+  max-width: 440px;
   position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
 }
 
 .modal-close {
   position: absolute;
-  top: 15px;
-  right: 20px;
+  top: 14px;
+  right: 16px;
   background: none;
   border: none;
-  font-size: 2rem;
+  font-size: 1.4rem;
   cursor: pointer;
-  color: #999;
-  transition: color 0.3s ease;
+  color: var(--text-muted);
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition), background var(--transition);
 }
 
 .modal-close:hover {
-  color: #333;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .modal-content h2 {
-  color: #333;
-  margin-bottom: 30px;
-  font-size: 2rem;
+  color: var(--text-primary);
+  margin-bottom: 28px;
+  font-size: 1.6rem;
+  font-weight: 700;
   text-align: center;
+  letter-spacing: -0.3px;
 }
 
+/* ── Form fields ──────────────────────────────────────── */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .form-group label {
   display: block;
-  color: #555;
-  font-weight: 600;
-  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 6px;
 }
 
 .form-group input {
   width: 100%;
-  padding: 12px 15px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
+  padding: 10px 13px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  transition: border-color var(--transition);
+}
+
+.form-group input::placeholder {
+  color: var(--text-muted);
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--border-focus);
 }
 
+/* ── Error ────────────────────────────────────────────── */
 .error-message {
-  background: #fee;
-  color: #c33;
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 15px;
+  background: rgba(240, 71, 71, 0.12);
+  color: var(--error);
+  border: 1px solid rgba(240, 71, 71, 0.3);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
   text-align: center;
+  font-size: 0.88rem;
 }
 
+/* ── Submit button ────────────────────────────────────── */
 .submit-button {
   width: 100%;
-  padding: 15px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  padding: 12px;
+  background: var(--primary-grad);
+  color: #fff;
   border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
   font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: box-shadow var(--transition), transform var(--transition);
 }
 
 .submit-button:hover:not(:disabled) {
-  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(124, 106, 245, 0.4);
+  transform: translateY(-1px);
 }
 
 .submit-button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
+/* ── Switch mode ──────────────────────────────────────── */
 .switch-mode {
   text-align: center;
-  margin-top: 20px;
-  color: #666;
+  margin-top: 18px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
 }
 
 .switch-mode span {
-  color: #667eea;
+  color: var(--primary);
   font-weight: 600;
   cursor: pointer;
 }
