@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import axios from 'axios'
 import './AddContentModal.css'
 
@@ -25,13 +25,36 @@ const AddContentModal: React.FC<AddContentModalProps> = ({ onClose, onSuccess })
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const applyFile = (f: File) => {
+    setFile(f)
+    if (!title) setTitle(f.name)
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
-      if (!title) {
-        setTitle(e.target.files[0].name)
-      }
+    if (e.target.files && e.target.files[0]) applyFile(e.target.files[0])
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const dropped = e.dataTransfer.files[0]
+    if (dropped && dropped.type === 'application/pdf') {
+      applyFile(dropped)
+    } else if (dropped) {
+      setError('Only PDF files are supported')
     }
   }
 
@@ -113,12 +136,30 @@ const AddContentModal: React.FC<AddContentModalProps> = ({ onClose, onSuccess })
           {contentType === 'pdf' ? (
             <div className="form-group">
               <label>Upload PDF</label>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={handleFileChange}
-                required
-              />
+              <div
+                className={`drop-zone${isDragging ? ' drop-zone--active' : ''}${file ? ' drop-zone--has-file' : ''}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {file ? (
+                  <span className="drop-zone-filename">📄 {file.name}</span>
+                ) : (
+                  <>
+                    <span className="drop-zone-icon">⬆</span>
+                    <span className="drop-zone-label">Drag &amp; drop a PDF here, or <u>browse</u></span>
+                  </>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileChange}
+                  required={!file}
+                  style={{ display: 'none' }}
+                />
+              </div>
             </div>
           ) : (
             <div className="form-group">

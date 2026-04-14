@@ -33,10 +33,51 @@
   color: var(--primary);
 }
 
-input[type='file'] {
-  padding: 10px;
+/* ── Drop zone ────────────────────────────────────────── */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  text-align: center;
+  margin-top: 8px;
+}
+
+.drop-zone:hover {
+  border-color: var(--primary);
+  background: rgba(124, 106, 245, 0.05);
+}
+
+.drop-zone--active {
+  border-color: var(--primary);
+  background: rgba(124, 106, 245, 0.1);
+}
+
+.drop-zone--has-file {
+  border-color: var(--success);
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.drop-zone-icon {
+  font-size: 1.6rem;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.drop-zone-label {
+  font-size: 0.875rem;
   color: var(--text-secondary);
-  font-family: inherit;
-  font-size: 0.9rem;
+}
+
+.drop-zone-filename {
+  font-size: 0.875rem;
+  color: var(--success);
+  font-weight: 600;
+  word-break: break-all;
 }
