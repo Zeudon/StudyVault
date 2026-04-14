@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import AddContentModal from '../components/AddContentModal'
+import ConfirmModal from '../components/ConfirmModal'
 import { useToast } from '../components/Toast'
 import axios from 'axios'
 import './LibraryPage.css'
@@ -29,7 +30,7 @@ const LibraryPage: React.FC<LibraryPageProps> = () => {
   const [processingIds, setProcessingIds] = useState<Set<number>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | 'pdf' | 'youtube'>('all')
-  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null)
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'az'>('newest')
   const { addToast } = useToast()
 
@@ -138,7 +139,7 @@ const LibraryPage: React.FC<LibraryPageProps> = () => {
       console.error('Error deleting item:', error)
       addToast({ type: 'error', message: 'Failed to delete item' })
     } finally {
-      setConfirmDeleteId(null)
+      setDeleteTarget(null)
     }
   }
 
@@ -319,32 +320,13 @@ const LibraryPage: React.FC<LibraryPageProps> = () => {
                   </div>
                 </div>
 
-                {/* Inline delete confirmation */}
-                {confirmDeleteId === item.id ? (
-                  <div className="delete-confirm">
-                    <span className="delete-confirm-label">Delete?</span>
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      Yes
-                    </button>
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => setConfirmDeleteId(null)}
-                    >
-                      No
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    className="btn btn-danger btn-icon delete-btn"
-                    onClick={() => setConfirmDeleteId(item.id)}
-                    aria-label="Delete item"
-                  >
-                    ✕
-                  </button>
-                )}
+                <button
+                  className="btn btn-danger btn-icon delete-btn"
+                  onClick={() => setDeleteTarget({ id: item.id, title: item.title })}
+                  aria-label="Delete item"
+                >
+                  ✕
+                </button>
               </div>
             ))}
           </div>
@@ -355,6 +337,16 @@ const LibraryPage: React.FC<LibraryPageProps> = () => {
         <AddContentModal
           onClose={() => setShowAddModal(false)}
           onSuccess={handleAddContent}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmModal
+          title="Delete item?"
+          message={`"${deleteTarget.title}" will be permanently removed from your library and cannot be recovered.`}
+          confirmLabel="Delete"
+          onConfirm={() => handleDelete(deleteTarget.id)}
+          onCancel={() => setDeleteTarget(null)}
         />
       )}
     </div>
