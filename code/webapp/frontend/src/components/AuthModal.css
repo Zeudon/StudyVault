@@ -141,3 +141,49 @@
 .switch-mode span:hover {
   text-decoration: underline;
 }
+
+/* ── Confirm / Destructive Modal ──────────────────────── */
+.confirm-modal {
+  max-width: 380px;
+  text-align: center;
+  padding: 40px 32px 32px;
+}
+
+.confirm-modal h2 {
+  font-size: 1.25rem;
+  margin-bottom: 10px;
+}
+
+.confirm-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(240, 71, 71, 0.12);
+  border: 1px solid rgba(240, 71, 71, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.confirm-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.confirm-message {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin-bottom: 28px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirm-actions .btn {
+  min-width: 100px;
+}
