@@ -25,6 +25,12 @@ SEMANTIC_CHUNK_THRESHOLD = int(os.getenv("SEMANTIC_CHUNK_THRESHOLD", "95"))  # p
 # Retrieval Configuration
 RETRIEVAL_TOP_K = int(os.getenv("RETRIEVAL_TOP_K", "5"))
 
+# Re-ranking Configuration
+RERANKING_ENABLED    = os.getenv("RERANKING_ENABLED", "true").lower() == "true"
+RERANKER_MODEL       = os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
+RERANKER_CANDIDATE_K = int(os.getenv("RERANKER_CANDIDATE_K", "20"))
+RERANKER_TOP_K       = int(os.getenv("RERANKER_TOP_K", str(RETRIEVAL_TOP_K)))
+
 # Retry Configuration
 MAX_RETRIES = 3
 RETRY_DELAY = 1  # seconds
