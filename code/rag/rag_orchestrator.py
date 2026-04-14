@@ -24,8 +24,13 @@ from .config import (
     GEMINI_MODEL,
     LLM_PROVIDER,
     OPENAI_CHAT_MODEL,
+    RERANKER_CANDIDATE_K,
+    RERANKER_MODEL,
+    RERANKER_TOP_K,
+    RERANKING_ENABLED,
     RETRIEVAL_TOP_K,
 )
+from .reranker_agent import RerankerAgent
 from .youtube_agent import YouTubeAgent
 
 logging.basicConfig(level=logging.INFO)
@@ -93,13 +98,23 @@ class RAGOrchestrator:
         self.indexing_agent = IndexingAgent()
         # Kept for search_documents (uses qdrant_client / embeddings directly)
         self._legacy_agent = ChunkingIndexingAgent()
-        self._llm = None  # lazy-initialised on first use
+        self._llm = None       # lazy-initialised on first use
+        self._reranker = None  # lazy-initialised on first use
 
     @property
     def llm(self):
         if self._llm is None:
             self._llm = _build_llm()
         return self._llm
+
+    @property
+    def reranker(self):
+        if self._reranker is None:
+            self._reranker = RerankerAgent(
+                model_name=RERANKER_MODEL,
+                top_k=RERANKER_TOP_K,
+            )
+        return self._reranker
 
     # ------------------------------------------------------------------
     # LCEL ingestion chains
@@ -258,6 +273,10 @@ class RAGOrchestrator:
         try:
             from qdrant_client.models import FieldCondition, Filter, MatchValue
 
+            # When re-ranking is on, fetch a wider candidate set from Qdrant
+            # so the cross-encoder has more material to work with.
+            candidate_limit = RERANKER_CANDIDATE_K if RERANKING_ENABLED else limit
+
             query_vec = await self._legacy_agent.embeddings.aembed_query(query)
             response = await self._legacy_agent.qdrant_client.query_points(
                 collection_name=COLLECTION_NAME,
@@ -265,7 +284,7 @@ class RAGOrchestrator:
                 query_filter=Filter(
                     must=[FieldCondition(key="user_id", match=MatchValue(value=user_id))]
                 ),
-                limit=limit,
+                limit=candidate_limit,
                 with_payload=True,
             )
             hits = response.points
@@ -281,6 +300,10 @@ class RAGOrchestrator:
                 }
                 for h in hits
             ]
+
+            if RERANKING_ENABLED and results:
+                results = await self.reranker.rerank(query, results)
+
             logger.info("Found %d relevant chunks", len(results))
             return {"status": "success", "results": results, "count": len(results)}
         except Exception as exc:
