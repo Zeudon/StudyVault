@@ -58,7 +58,7 @@ services:
       # Retrieval
       RETRIEVAL_TOP_K: ${RETRIEVAL_TOP_K:-5}
       # Re-ranking (set to 'true' to enable cross-encoder second stage)
-      RERANKING_ENABLED: ${RERANKING_ENABLED:-false}
+      RERANKING_ENABLED: ${RERANKING_ENABLED:-true}
       SEMANTIC_CHUNK_THRESHOLD: ${SEMANTIC_CHUNK_THRESHOLD:-95}
       MIN_TRANSCRIPT_LENGTH: ${MIN_TRANSCRIPT_LENGTH:-200}
       # YouTube MCP server (optional — used as transcript fallback)
